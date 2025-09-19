@@ -5,5 +5,5 @@
 #SBATCH--cpus-per-task=4
 #SBATCH--output=race_conditions.output
 cd $SLURM_SUBMIT_DIR
-g++-O2-std=c++17 race_conditions.cpp-o race_conditions-pthread
+g++ -O2 -std=c++17 race_conditions.cpp -o race_conditions-pthread
 ./race_conditions
