@@ -6,7 +6,7 @@ int main() {
     const int N = 10000000;
     std::vector<int> data(N, 1); // Make the whole data vector 1s
 
-    for (int threads = 1; threads <= 8; ++threads) {
+    for (int threads = 1; threads <= 8; threads *= 2) {
         double sum = 0;
         double t0 = omp_get_wtime();
 
