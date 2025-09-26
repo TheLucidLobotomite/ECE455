@@ -3,7 +3,7 @@
 #include <omp.h>
 
 int main() {
-    const int N = 512;
+    const int N = 1024;
     std::vector<std::vector<int>> A(N, std::vector<int>(N, 1)); // Initialize A with 1s
     std::vector<std::vector<int>> B(N, std::vector<int>(N, 1)); // Initialize B with 1s
     std::vector<std::vector<int>> C(N, std::vector<int>(N, 0)); // Resultant matrix C
