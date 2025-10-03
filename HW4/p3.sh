@@ -7,6 +7,7 @@
 #SBATCH --time=00:01:00
 #SBATCH --output=vector_add.output
 
+cd $SLURM_SUBMIT_DIR
 module load nvidia/cuda
 nvcc vector_add.cu -o vector_add
 ./vector_add

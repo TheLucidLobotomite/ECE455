@@ -7,6 +7,7 @@
 #SBATCH --time=00:01:00
 #SBATCH --output=thread_indexing.output
 
+cd $SLURM_SUBMIT_DIR
 module load nvidia/cuda
 nvcc thread_indexing.cu -o thread_indexing
 ./thread_indexing

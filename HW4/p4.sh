@@ -7,6 +7,7 @@
 #SBATCH --time=00:01:00
 #SBATCH --output=saxpy.output
 
+cd $SLURM_SUBMIT_DIR
 module load nvidia/cuda
 nvcc saxpy.cu -o saxpy
 ./saxpy
