@@ -1,4 +1,4 @@
-#!/usr/bin/env zash
+#!/usr/bin/env zsh
 #SBATCH --partition=instruction
 #SBATCH --time=00:01:00
 #SBATCH --ntasks=1
