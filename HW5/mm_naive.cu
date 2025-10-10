@@ -8,97 +8,96 @@
 #include <vector>
 
 #define BLOCK_DIM 32
-#define MAT_DIM 1024
+#define MAT_DIM 1024 
 
-// Basically just a checkCuda to see if there was an error
 #define checkCuda(val) check((val), #val, __FILE__, __LINE__)
-void check(cudaError_t err, char const* const func, const char* const file, int const line)
+void check(cudaError_t err, const char* const func, const char* const file, const int line)
 {
-  if (err != cudaSuccess)
+    if (err != cudaSuccess)
     {
-        std::cerr << "CUDA Runtime Error at: " << file << ":" << line
-                  << std::endl;
+        std::cerr << "CUDA Runtime Error at: " << file << ":" << line << std::endl;
         std::cerr << cudaGetErrorString(err) << " " << func << std::endl;
         std::exit(EXIT_FAILURE);
     }
 }
 
-// Create a vector of size n with random values between -256 and 256
 template <typename T>
 std::vector<T> create_rand_vector(size_t n)
 {
     std::random_device r;
     std::default_random_engine e(r());
-    std::uniform_real_distribution<int> uniform_dist(-256, 256);
+    std::uniform_int_distribution<int> uniform_dist(-256, 256);
+
     std::vector<T> vec(n);
-    for (size_t i = 0; i < n; ++i)
+    for (size_t i{0}; i < n; ++i)
     {
         vec.at(i) = static_cast<T>(uniform_dist(e));
     }
+
     return vec;
 }
 
-// mat_1 is m x n
-// mat_2 is n x p
-// mat_3 is m x p
+// mat_1: m x n
+// mat_2: n x p
+// mat_3: m x p
 template <typename T>
 void mm(T const* mat_1, T const* mat_2, T* mat_3, size_t m, size_t n, size_t p)
 {
-    // Compute Sequentially
+    // Compute the cells in mat_3 sequentially.
     for (size_t i{0}; i < m; ++i)
     {
         for (size_t j{0}; j < p; ++j)
         {
-            T sum{0};
+            T acc_sum{0};
             for (size_t k{0}; k < n; ++k)
             {
-                sum += mat_1[i * n + k] * mat_2[k * p + j];
+                acc_sum += mat_1[i * n + k] * mat_2[k * p + j];
             }
-            mat_3[i * p + j] = sum;
+            mat_3[i * p + j] = acc_sum;
         }
     }
 }
+
 
 template <typename T>
 __global__ void mm_kernel(T const* mat_1, T const* mat_2, T* mat_3, size_t m, size_t n, size_t p)
 {
     // 2D block and 2D thread
+    // Each thread computes one cell in mat_3.
     size_t i{blockIdx.x * blockDim.x + threadIdx.x};
     size_t j{blockIdx.y * blockDim.y + threadIdx.y};
 
-    // Bound prevention
-    if ((i >= m)) || (j >= p)
+    // Do not process outside the matrix.
+    // Do not forget the equal sign!
+    if ((i >= m) || (j >= p))
     {
         return;
     }
 
-    // Just do the one column and row pair for this thread
-    T sum{0};
+    T acc_sum{0};
     for (size_t k{0}; k < n; ++k)
     {
-        sum += mat_1[i * n + k] * mat_2[k * p + j];
+        acc_sum += mat_1[i * n + k] * mat_2[k * p + j];
     }
-    mat_3[i * p + j] = sum;
+    mat_3[i * p + j] = acc_sum;
 }
+
 
 template <typename T>
 void mm_cuda(T const* mat_1, T const* mat_2, T* mat_3, size_t m, size_t n, size_t p)
 {
-    dim3 block_per_grid(1,1);
     dim3 threads_per_block(BLOCK_DIM, BLOCK_DIM);
-
+    dim3 blocks_per_grid(1, 1);
     blocks_per_grid.x = std::ceil(static_cast<double>(p) / static_cast<double>(threads_per_block.x));
     blocks_per_grid.y = std::ceil(static_cast<double>(m) / static_cast<double>(threads_per_block.y));
-
     mm_kernel<<<blocks_per_grid, threads_per_block>>>(mat_1, mat_2, mat_3, m, n, p);
-    
-    // Memory transfer so auto synchronization happens
-    //checkCuda(cudaDeviceSynchronize());
 }
 
-// Check if two vectors are element-wise equal within a tolerance
+
+
 template <typename T>
-bool allclose(std::vector<T> const& vec_1, std::vector<T> const& vec_2, T const& abs_tol){
+bool allclose(std::vector<T> const& vec_1, std::vector<T> const& vec_2, T const& abs_tol)
+{
     if (vec_1.size() != vec_2.size())
     {
         return false;
@@ -114,7 +113,6 @@ bool allclose(std::vector<T> const& vec_1, std::vector<T> const& vec_2, T const&
     return true;
 }
 
-// Test function for random matrices of size m x n and n x p
 template <typename T>
 bool random_test_mm_cuda(size_t m, size_t n, size_t p)
 {
@@ -163,7 +161,6 @@ bool random_test_mm_cuda(size_t m, size_t n, size_t p)
 }
 
 
-// Run multiple tests of random matrices of size m x n and n x p
 template <typename T>
 bool random_multiple_test_mm_cuda(size_t num_tests)
 {
@@ -182,7 +179,6 @@ bool random_multiple_test_mm_cuda(size_t num_tests)
 }
 
 
-// Measure latency of matrix multiplication on GPU
 template <typename T>
 float measure_latency_mm_cuda(size_t m, size_t n, size_t p, size_t num_tests, size_t num_warmups)
 {
@@ -230,30 +226,33 @@ float measure_latency_mm_cuda(size_t m, size_t n, size_t p, size_t num_tests, si
     return latency;
 }
 
-// Host Driver
+
+
 int main()
 {
     const size_t num_tests{2};
+
+    // Run tests to check correctness.
     assert(random_multiple_test_mm_cuda<int32_t>(num_tests));
     assert(random_multiple_test_mm_cuda<float>(num_tests));
     assert(random_multiple_test_mm_cuda<double>(num_tests));
+
     std::cout << "All tests passed!\n";
 
-    // Latency measurement parameters
     const size_t num_measurement_tests{2};
     const size_t num_measurement_warmups{1};
     size_t m{MAT_DIM}, n{MAT_DIM}, p{MAT_DIM};
 
-    // Measure latency for int32, float, and double
     float mm_cuda_int32_latency = measure_latency_mm_cuda<int32_t>(m, n, p, num_measurement_tests, num_measurement_warmups);
     float mm_cuda_float_latency = measure_latency_mm_cuda<float>(m, n, p, num_measurement_tests, num_measurement_warmups);
     float mm_cuda_double_latency = measure_latency_mm_cuda<double>(m, n, p, num_measurement_tests, num_measurement_warmups);
 
-    // Print results
-    std::cout << " Matrix Multiplication Runtime \n";
-    std::cout << "m: " << m << " n: " << n << " p: " << p << "\n";
-    std::cout << " INT32 : " << mm_cuda_int32_latency << " ms\n";
-    std::cout << " FLOAT : " << mm_cuda_float_latency << " ms\n";
-    std::cout << " DOUBLE : " << mm_cuda_double_latency << " ms\n";
-    return 0;
+
+    std::cout << "Matrix Multiplication Runtime\n";
+    std::cout << "m: " << m << " " << "n: " << n << " " << "p: " << p << "\n";
+    std::cout << "INT32: " << std::fixed << std::setprecision(5) << mm_cuda_int32_latency << " ms\n";
+    std::cout << "FLOAT: " << std::fixed << std::setprecision(5) << mm_cuda_float_latency << " ms\n";
+    std::cout << "DOUBLE: " << std::fixed << std::setprecision(5) << mm_cuda_double_latency << " ms\n";
+
+   return 0;
 }
