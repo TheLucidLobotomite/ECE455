@@ -1,0 +1,6 @@
+All tests passed!
+Matrix Multiplication Runtime
+m: 1024 n: 1024 p: 1024
+INT32: 15.43014 ms
+FLOAT: 15.42912 ms
+DOUBLE: 15.81722 ms
