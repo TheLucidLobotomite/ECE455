@@ -1,1 +1,11 @@
-slurmstepd: error: execve(): /var/spool/slurmd/job2182831/slurm_script: Permission denied
+Running Shared-Memory Reduction (N = 16777216)...
+Computing CPU reference...
+CPU Result: 838970319
+GPU Result: 838970319
+Difference: 0
+Validation PASSED.
+
+--- Performance ---
+CPU time: 98.58581 ms
+GPU avg kernel time (3 runs): 0.31437 ms
+Speedup (CPU / GPU): 313.60001x
