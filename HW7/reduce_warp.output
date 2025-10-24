@@ -1,0 +1,11 @@
+Running Warp-Level Reduction (using __shfl_down_sync, N = 16777216)...
+Computing CPU reference...
+CPU Result: 838799593
+GPU Result: 838799593
+Difference: 0
+Validation PASSED.
+
+--- Performance ---
+CPU time: 98.49000 ms
+GPU avg kernel time (3 runs): 0.30481 ms
+Speedup (CPU / GPU): 323.11862x
