@@ -1,21 +1,30 @@
-#include <taskflow/taskflow.hpp>  // Taskflow is header-only
+#include <taskflow/taskflow.hpp>  // Taskflow header
+#include <cstdio>                 // for printf
 
-int main(){
-  
-  tf::Executor executor;
-  tf::Taskflow taskflow;
+int main() {
+    tf::Executor executor;
+    tf::Taskflow taskflow("Static Taskflow Demo");
 
-  auto [A, B, C, D] = taskflow.emplace(  // create four tasks
-    [] () { std::cout << "TaskA\n"; },
-    [] () { std::cout << "TaskB\n"; },
-    [] () { std::cout << "TaskC\n"; },
-    [] () { std::cout << "TaskD\n"; } 
-  );                                  
-                                      
-  A.precede(B, C);  // A runs before B and C
-  D.succeed(B, C);  // D runs after  B and C
-                                      
-  executor.run(taskflow).wait(); 
+    auto A = taskflow.emplace([]() {
+        printf("Task A\n");
+    });
 
-  return 0;
+    auto B = taskflow.emplace([]() {
+        printf("Task B\n");
+    });
+
+    auto C = taskflow.emplace([]() {
+        printf("Task C\n");
+    });
+
+    auto D = taskflow.emplace([]() {
+        printf("Task D\n");
+    });
+
+    // Define dependencies: A precedes B and C; both B and C precede D.
+    A.precede(B, C);
+    B.precede(D);
+    C.precede(D);
+
+    executor.run(taskflow).wait();
 }
