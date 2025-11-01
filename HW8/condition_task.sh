@@ -7,5 +7,5 @@
 
 cd $SLURM_SUBMIT_DIR
 module load gcc
-g++ -std=c++17 condition_task.cpp -o condition_task -I path/to/taskflow/ -pthread
+g++ -std=c++17 condition_task.cpp -I. -O2 -pthread -o condition_task
 ./condition_task
